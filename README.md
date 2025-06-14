@@ -29,7 +29,7 @@ Each ticket is designed with futuristic aesthetics and symbolic themes.
 ---
 
 ### 🔗 Quantum Sync  
-*Visual coming soon…*
+![Quantum Sync](./quantum_sync.png)
 
 ---
 
