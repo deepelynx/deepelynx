@@ -19,8 +19,25 @@ exports.handler = async (event) => {
 
   try {
     const data = JSON.parse(event.body);
-    const { email, honey } = data;
+    const { email, name, honey, token } = data;
 
+    // Temel validasyonlar
+    if (!name || name.trim() === '') {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Name is required.' }),
+      };
+    }
+    if (!email || email.trim() === '') {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Email is required.' }),
+      };
+    }
+
+    // Honeypot kontrolü
     if (honey && honey.trim() !== '') {
       return {
         statusCode: 400,
@@ -29,13 +46,39 @@ exports.handler = async (event) => {
       };
     }
 
+    // reCAPTCHA doğrulama
+    if (!token) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'reCAPTCHA token missing.' }),
+      };
+    }
+    const recaptchaRes = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
+    });
+    const recaptchaJson = await recaptchaRes.json();
+    if (!recaptchaJson.success || (recaptchaJson.score && recaptchaJson.score < 0.5)) {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'reCAPTCHA verification failed.' }),
+      };
+    }
+
+    // Access code ve tarih üret
     const accessGrantCode = `solo${uuidv4().slice(0, 8)}`;
     const issuedDate = new Date().toISOString().split('T')[0];
 
+    // Veritabanına kayıt
     const { error } = await supabase.from('deepelynx_tickets').insert([
       {
+        name,
         email,
         ticket_code: accessGrantCode,
+        issued_at: issuedDate,
         ticket_type: 'solo',
       },
     ]);
@@ -49,6 +92,7 @@ exports.handler = async (event) => {
       };
     }
 
+    // Hoşgeldin maili gönderimi
     await sendWelcomeEmail({
       to: email,
       accessGrantCode,
