@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY  // Ortam değişken adını buraya göre ayarla
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 exports.handler = async (event) => {
@@ -11,7 +11,7 @@ exports.handler = async (event) => {
     if (!event.body) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ success: false, message: 'Eksik veri gönderildi.' }),
+        body: JSON.stringify({ success: false, message: 'Missing request body.' }),
       };
     }
 
@@ -20,37 +20,34 @@ exports.handler = async (event) => {
     if (!name || !email || !token) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ success: false, message: 'Gerekli alanlar eksik.' }),
+        body: JSON.stringify({ success: false, message: 'Required fields are missing.' }),
       };
     }
 
-    // reCAPTCHA doğrulaması
-    const recaptchaResponse = await fetch(
-      'https://www.google.com/recaptcha/api/siteverify',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `secret=${process.env.RECAPTCHA_SECRET}&response=${token}`,
-      }
-    );
+    // Verify reCAPTCHA
+    const recaptchaRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${process.env.RECAPTCHA_SECRET}&response=${token}`,
+    });
 
-    const recaptchaData = await recaptchaResponse.json();
+    const recaptchaData = await recaptchaRes.json();
 
     if (!recaptchaData.success || recaptchaData.score < 0.5) {
       return {
         statusCode: 400,
         body: JSON.stringify({
           success: false,
-          message: 'Bot şüphesi tespit edildi. Lütfen tekrar deneyin.',
+          message: 'Suspicious activity detected. Please try again.',
         }),
       };
     }
 
-    // Ticket ve referral kodları üret
+    // Generate unique codes
     const ticket_code = Math.random().toString(36).substring(2, 10).toUpperCase();
     const new_referral_code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-    // Supabase tablosuna ekleme
+    // Insert into Supabase
     const { data, error } = await supabase
       .from('deepelynx_tickets')
       .insert({
@@ -80,7 +77,10 @@ exports.handler = async (event) => {
   } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: error.message || 'Bilinmeyen hata.' }),
+      body: JSON.stringify({
+        success: false,
+        message: error.message || 'An unexpected error occurred.',
+      }),
     };
   }
 };
