@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome to Deepelynx Quantum Labs</title>
+  <style>
+    body {
+      background-color: #0f111b;
+      color: #00f5ff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #121622;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00f5ff88;
+    }
+    h1 {
+      color: #00f5ff;
+      margin-bottom: 10px;
+    }
+    p {
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .code {
+      background: #001f29;
+      color: #00f5ff;
+      font-weight: 700;
+      font-size: 1.2rem;
+      padding: 12px 16px;
+      border-radius: 8px;
+      letter-spacing: 2px;
+      text-align: center;
+      user-select: all;
+      margin-bottom: 30px;
+    }
+    a.button {
+      display: inline-block;
+      padding: 15px 30px;
+      background: #00f5ff;
+      color: #0f111b;
+      font-weight: 700;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: background 0.3s ease;
+    }
+    a.button:hover {
+      background: #00c1d4;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 0.9rem;
+      color: #00b3ccaa;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Deepelynx Quantum Labs!</h1>
+    <p>We're thrilled to have you on board. You've just unlocked your <strong>Quantum SOLO Access Grant Ticket</strong>.</p>
+
+    <p>Your unique access grant code:</p>
+    <div class="code">{{ACCESS_GRANT_CODE}}</div>
+
+    <p>Ready to dive deeper? Use the invite link below to share this journey and unlock more possibilities.</p>
+    <a href="{{INVITE_LINK}}" class="button" target="_blank" rel="noopener noreferrer">Invite Your Friends</a>
+
+    <footer>
+      © 2025 Deepelynx Quantum Labs — All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>

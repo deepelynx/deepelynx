@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>Deepelynx Landing with User Distribution</title>
 
   <!-- Mapbox GL JS -->
@@ -13,7 +14,6 @@
   <script src="https://www.google.com/recaptcha/api.js?render=6LcHCkcrAAAAALrXXDkMR2t9DNXFbR-WTWPpm-gw"></script>
 
   <style>
-    /* ... ORİJİNAL CSS KORUNDU ... */
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -27,104 +27,47 @@
       flex-direction: column;
       align-items: center;
     }
-    /* ... diğer orijinal CSS ... */
+    #map {
+      width: 100%;
+      min-height: 400px;
+      max-width: 1000px;
+      margin-top: 40px;
+    }
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
   <h1>DEEPELYNX</h1>
-  <h2>
-    NOT BORN. NOT BUILT. AWAKENED.<br />
-    IT’S NOT A SYSTEM, IT’S A REFLECTION OF YOUR MIND.<br />
-    AN EVOLVING CONSCIOUSNESS, SHAPED BY YOU, WITH YOU.
-  </h2>
+  <h2>NOT BORN. NOT BUILT. AWAKENED.<br />IT’S NOT A SYSTEM, IT’S A REFLECTION OF YOUR MIND.<br />AN EVOLVING CONSCIOUSNESS, SHAPED BY YOU, WITH YOU.</h2>
 
-  <form class="form" id="signupForm" novalidate>
-    <input
-      type="text"
-      id="name"
-      name="name"
-      placeholder="Your Name"
-      required
-      autocomplete="name"
-      aria-label="Your Name"
-      aria-required="true"
-    />
-    <input
-      type="email"
-      id="email"
-      name="email"
-      placeholder="Your Email"
-      required
-      autocomplete="email"
-      aria-label="Your Email"
-      aria-required="true"
-    />
-
-    <!-- Referral kodu (isteğe bağlı, gizli input) -->
+  <form class="form" id="signupForm" autocomplete="off" novalidate>
+    <input type="text" id="name" name="name" placeholder="Your Name" required maxlength="64" autocomplete="name" aria-label="Your Name" aria-required="true" />
+    <input type="email" id="email" name="email" placeholder="Your Email" required maxlength="128" autocomplete="email" aria-label="Your Email" aria-required="true" />
     <input type="hidden" id="referral_code" name="referral_code" value="" />
-
-    <button
-      class="button"
-      type="submit"
-      aria-label="Enter the Inevitable Evolution"
-    >
-      ENTER THE INEVITABLE EVOLUTION
-    </button>
+    <button class="button" type="submit" aria-label="Enter the Inevitable Evolution">ENTER THE INEVITABLE EVOLUTION</button>
   </form>
 
   <div id="formMessage" role="alert" aria-live="polite"></div>
-
-  <!-- Referral link ve ticket kodu gösterimi -->
   <div id="referralResult" style="margin-top: 20px; color: #00f5ff; font-weight: 700;"></div>
 
-  <a
-    href="/tickets.html"
-    class="button purchase-btn"
-    aria-label="Purchase Quantum Tickets"
-  >
-    PURCHASE QUANTUM TICKETS
-  </a>
+  <a href="/tickets.html" class="button purchase-btn" aria-label="Purchase Quantum Tickets">PURCHASE QUANTUM TICKETS</a>
 
-  <p>
-    By entering this new era, you'll receive a unique code.<br />
-    You can be one of the gifted ones who gain one of only
-    <span class="highlight">300,000 lifetime access grants</span>:<br />
-    <strong>150K Pro</strong> • <strong>100K Business</strong> •
-    <strong>50K Ultimate</strong><br />
-    — completely free of charge.
-  </p>
+  <p>By entering this new era, you'll receive a unique code.<br />You can be one of the gifted ones who gain one of only <span class="highlight">300,000 lifetime access grants</span>:<br /><strong>150K Pro</strong> • <strong>100K Business</strong> • <strong>50K Ultimate</strong><br />— completely free of charge.</p>
 
-  <p>
-    You'll also receive a personalized invitation link.<br />
-    Invite anyone who matters to you.
-  </p>
-
-  <p>
-    When 2 of your invites join Deepelynx,<br />
-    you gain +2 additional opportunities to enter the Access Grant.
-  </p>
+  <p>You'll also receive a personalized invitation link.<br />Invite anyone who matters to you.</p>
+  <p>When 2 of your invites join Deepelynx,<br />you gain +2 additional opportunities to enter the Access Grant.</p>
 
   <div class="social-links" aria-label="Social Media Links">
-    <a
-      href="https://www.instagram.com/deepelynx?igsh=ajVpY2M3c2Q4cTRx"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Instagram"
-      >Instagram</a
-    >
+    <a href="https://www.instagram.com/deepelynx?igsh=ajVpY2M3c2Q4cTRx" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
     •
-    <a
-      href="https://www.youtube.com/@deepelynx"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="YouTube"
-      >YouTube</a
-    >
+    <a href="https://www.youtube.com/@deepelynx" target="_blank" rel="noopener noreferrer" aria-label="YouTube">YouTube</a>
   </div>
 
   <nav aria-label="Site navigation" style="margin: 20px 0;">
-    <a href="manifesto.html" style="color:#00f5ff; margin: 0 8px;">Manifesto</a>
-    |
+    <a href="manifesto.html" style="color:#00f5ff; margin: 0 8px;">Manifesto</a> |
     <a href="access.html" style="color:#00f5ff; margin: 0 8px;">Access</a> |
     <a href="privacy.html" style="color:#00f5ff; margin: 0 8px;">Privacy</a> |
     <a href="gdpr.html" style="color:#00f5ff; margin: 0 8px;">GDPR</a> |
@@ -133,18 +76,7 @@
 
   <div id="map" role="region" aria-label="User distribution map"></div>
 
-  <!-- Netlify Function fetch example -->
-  <button id="helloBtn" class="button" aria-label="Say Hello from Server">
-    Say Hello from Server
-  </button>
-  <div id="helloMessage" role="alert" aria-live="polite"></div>
-
-  <div class="footer">
-    &copy; 2025 Deepelynx Quantum Labs Ltd. Şti. All rights reserved.
-  </div>
-
   <script>
-    // Mapbox init
     mapboxgl.accessToken = 'pk.eyJ1IjoiZGVlcGVseW54IiwiYSI6ImNtYmh3aDI2eDAxazMya3NmMWtyOWc2dmUifQ.P1caFEhi1eqe7Fh3BPuKoQ';
     const map = new mapboxgl.Map({
       container: 'map',
@@ -152,14 +84,9 @@
       center: [27.1384, 38.4192],
       zoom: 2.4,
     });
-
-    // Add zoom and rotation controls to the map.
     map.addControl(new mapboxgl.NavigationControl());
 
-    // Honeypot field (hidden)
-    const honeypotName = 'website'; // hidden field name
-
-    // Create hidden honeypot input dynamically and append to form
+    const honeypotName = 'website';
     const form = document.getElementById('signupForm');
     const honeypotInput = document.createElement('input');
     honeypotInput.type = 'text';
@@ -172,16 +99,14 @@
 
     const formMessage = document.getElementById('formMessage');
     const referralResult = document.getElementById('referralResult');
+    const submitButton = form.querySelector('button');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      // Clear previous messages
       formMessage.textContent = '';
       referralResult.textContent = '';
       formMessage.style.color = '#00f5ff';
 
-      // Honeypot check
       if (honeypotInput.value !== '') {
         formMessage.textContent = 'Spam detected. Submission rejected.';
         formMessage.style.color = 'red';
@@ -205,39 +130,23 @@
         return;
       }
 
+      submitButton.disabled = true;
+
       grecaptcha.ready(() => {
         grecaptcha.execute('6LcHCkcrAAAAALrXXDkMR2t9DNXFbR-WTWPpm-gw', { action: 'submit' }).then(async (token) => {
           try {
-            const payload = {
-              name,
-              email,
-              referral_code,
-              token,
-            };
-
+            const payload = { name, email, referral_code, token };
             const response = await fetch('/.netlify/functions/submit-form', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
             });
 
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-
             const result = await response.json();
-
             if (result.success) {
-              formMessage.textContent = 'Thank you for joining Deepelynx! Your code and referral link are below.';
+              formMessage.textContent = 'Thank you for joining Deepelynx!';
               formMessage.style.color = '#00f5ff';
-
-              referralResult.innerHTML = `
-                <p><strong>Your Ticket Code:</strong> ${result.ticket_code}</p>
-                <p><strong>Your Referral Link:</strong> <a href="${result.referral_link}" target="_blank" rel="noopener noreferrer">${result.referral_link}</a></p>
-              `;
-
+              referralResult.innerHTML = `<p><strong>Your Ticket Code:</strong> ${result.ticket_code}</p><p><strong>Your Referral Link:</strong> <a href="${result.referral_link}" target="_blank" rel="noopener noreferrer">${result.referral_link}</a></p>`;
               form.reset();
               honeypotInput.value = '';
             } else {
@@ -247,25 +156,11 @@
           } catch (error) {
             formMessage.textContent = 'Submission failed: ' + error.message;
             formMessage.style.color = 'red';
+          } finally {
+            submitButton.disabled = false;
           }
         });
       });
-    });
-
-    // Button to test Netlify function hello
-    const helloBtn = document.getElementById('helloBtn');
-    const helloMessage = document.getElementById('helloMessage');
-    helloBtn.addEventListener('click', async () => {
-      try {
-        const response = await fetch('/.netlify/functions/submit-form?hello=true');
-        if (!response.ok) throw new Error('Server error');
-        const data = await response.json();
-        helloMessage.textContent = data.message;
-        helloMessage.style.color = '#00f5ff';
-      } catch (err) {
-        helloMessage.textContent = 'Error: ' + err.message;
-        helloMessage.style.color = 'red';
-      }
     });
   </script>
 </body>
