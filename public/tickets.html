@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deepelynx – Purchase Quantum Tickets</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    /* Temel body & font */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a14; /* Koyu tema arkaplan */
+      color: #d0f0ff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* Nefes alan başlık */
+    .breathe-title {
+      font-size: 2.8rem;
+      text-align: center;
+      margin-top: 3.5rem;
+      margin-bottom: 2rem;
+      animation: breathe 3s ease-in-out infinite;
+      color: #00f0ff;
+      text-shadow: 0 0 8px #00f0ffaa;
+      letter-spacing: 1.2px;
+    }
+
+    @keyframes breathe {
+      0% {
+        opacity: 0.6;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+
+      100% {
+        opacity: 0.6;
+        transform: scale(1);
+      }
+    }
+
+    /* Container - içerik merkezi */
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #121224;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 0 15px #00f0ff44;
+    }
+
+    label {
+      display: block;
+      margin-top: 1.2rem;
+      font-weight: 600;
+      color: #7eeeff;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select,
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 14px;
+      margin-top: 6px;
+      border: none;
+      border-radius: 6px;
+      background-color: #1b1c33;
+      color: #cceeff;
+      font-size: 1rem;
+      box-shadow: inset 0 0 8px #008bb5;
+      transition: box-shadow 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    select:focus,
+    input[type="number"]:focus {
+      outline: none;
+      box-shadow: 0 0 10px #00f0ff;
+      background-color: #18202f;
+      color: #e0ffff;
+    }
+
+    /* Açıklamalar, küçük metin */
+    .hint {
+      font-size: 0.85rem;
+      color: #44dfffaa;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    /* Buton */
+    button {
+      margin-top: 2rem;
+      width: 100%;
+      padding: 12px 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0a0a14;
+      background: linear-gradient(90deg, #00f0ff, #007ea7);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px #00c3ffcc;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover,
+    button:focus {
+      background: linear-gradient(90deg, #007ea7, #00f0ff);
+      box-shadow: 0 6px 20px #00f0ffdd;
+      outline: none;
+    }
+
+    /* Genel link stili */
+    a {
+      color: #00f0ff;
+      text-decoration: underline;
+    }
+
+    a:hover,
+    a:focus {
+      color: #00ccff;
+      outline: none;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1 class="breathe-title">Purchase Quantum Tickets</h1>
+    <div class="container">
+      <form id="purchase-form" method="POST" action="#">
+        <label for="name">Full Name</label>
+        <input id="name" name="name" type="text" placeholder="Your full name" required />
+
+        <label for="email">Email Address</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" required />
+
+        <label for="product_name">Select Quantum Package</label>
+        <select id="product_name" name="product_name" required>
+          <option value="" disabled selected>Choose your package</option>
+          <option value="Quantum Solo">🎫 Quantum Solo — 1 ticket ($5)</option>
+          <option value="Quantum Sync">🧬 Quantum Sync — 5 tickets ($20)</option>
+          <option value="Quantum Surge">⚡ Quantum Surge — 10 tickets ($35)</option>
+          <option value="Quantum Legend">👑 Quantum Legend — 20 tickets ($70)</option>
+        </select>
+
+        <label for="quantity">Quantity</label>
+        <input id="quantity" name="quantity" type="number" min="1" max="100" value="1" required />
+        <p class="hint">Select how many packages you want to buy</p>
+
+        <label for="referral_code">Referral Code (optional)</label>
+        <input id="referral_code" name="referral_code" type="text" placeholder="Enter referral code if you have one" />
+
+        <button type="submit">Purchase Now</button>
+      </form>
+    </div>
+  </main>
+</body>
+
+</html>

@@ -1,0 +1,27 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "node-fetch": "^2.7.0",
+    "uuid": "^11.1.0"
+  },
+  "scripts": {
+    "start": "netlify dev",
+    "build": "netlify build"
+  },
+  "name": "project-folder",
+  "version": "1.0.0",
+  "description": "Welcome to the official **Quantum Access Ticket** repository — part of the Deepelynx universe.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepelynx/deepelynx.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deepelynx/deepelynx/issues"
+  },
+  "homepage": "https://github.com/deepelynx/deepelynx#readme"
+}

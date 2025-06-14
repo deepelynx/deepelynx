@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Deepelynx Landing with User Distribution</title>
+  
+  <!-- Mapbox GL JS -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  
+  <!-- Google reCAPTCHA v3 -->
+  <script src="https://www.google.com/recaptcha/api.js?render=6LcHCkcrAAAAALrXXDkMR2t9DNXFbR-WTWPpm-gw"></script>
+
+  <style>
+    /* Temel stil, koyu tema */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0a0a0a;
+      color: #eee;
+      text-align: center;
+      padding: 40px 20px 60px 20px;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Nefes alma animasyonlu başlık */
+    @keyframes breathe {
+      0%, 100% {opacity: 1;}
+      50% {opacity: 0.6;}
+    }
+    h1 {
+      font-size: 48px;
+      font-weight: 900;
+      color: #00f5ff;
+      text-shadow: 0 0 15px #00f5ff;
+      margin-bottom: 10px;
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    h2 {
+      font-weight: 400;
+      font-size: 20px;
+      color: #bbb;
+      margin-bottom: 30px;
+      line-height: 1.4;
+      max-width: 700px;
+    }
+
+    .highlight {
+      color: #00f5ff;
+      font-weight: 700;
+    }
+
+    /* Form container */
+    form.form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      max-width: 320px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    input[type='text'],
+    input[type='email'] {
+      padding: 10px 14px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+      outline: none;
+      transition: box-shadow 0.3s ease;
+      background-color: #121212;
+      color: #eee;
+      border: 1.5px solid #222;
+    }
+
+    input[type='text']:focus,
+    input[type='email']:focus {
+      box-shadow: 0 0 10px #00f5ff;
+      border-color: #00f5ff;
+      background-color: #0d0d0d;
+    }
+
+    /* Buton form altında */
+    button.button {
+      background-color: #00f5ff;
+      color: black;
+      font-weight: 700;
+      padding: 14px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      box-shadow: 0 0 20px #00f5ff;
+      cursor: pointer;
+      user-select: none;
+      width: 100%;
+      max-width: 320px;
+      transition: all 0.3s ease-in-out;
+    }
+    button.button:hover,
+    button.button:focus {
+      background-color: black;
+      color: #00f5ff;
+      box-shadow: 0 0 30px #00f5ff;
+      border: 1.5px solid #00f5ff;
+      outline: none;
+    }
+
+    /* Bağlantı buton - satın alma */
+    a.button.purchase-btn {
+      background-color: #00f5ff;
+      color: black;
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 10px;
+      font-size: 16px;
+      box-shadow: 0 0 20px #00f5ff;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 30px;
+      transition: all 0.3s ease-in-out;
+      user-select: none;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+    }
+    a.button.purchase-btn:hover,
+    a.button.purchase-btn:focus {
+      background-color: black;
+      color: #00f5ff;
+      box-shadow: 0 0 30px #00f5ff;
+      border: 1.5px solid #00f5ff;
+      outline: none;
+    }
+
+    p {
+      font-size: 16px;
+      max-width: 700px;
+      margin: 8px auto;
+      line-height: 1.5;
+      color: #bbb;
+    }
+
+    /* Harita */
+    #map {
+      width: 100%;
+      max-width: 800px;
+      height: 400px;
+      margin: 40px auto 0 auto;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+      background-color: #121212;
+      min-height: 300px;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 60px;
+      font-size: 12px;
+      color: #666;
+    }
+    .footer a {
+      color: #555;
+      text-decoration: none;
+      margin: 0 6px;
+      transition: color 0.3s ease;
+    }
+    .footer a:hover,
+    .footer a:focus {
+      color: #00f5ff;
+      outline: none;
+    }
+
+    /* Sosyal medya linkleri */
+    .social-links {
+      margin: 30px 0 10px 0;
+    }
+    .social-links a {
+      color: #00f5ff;
+      margin: 0 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 18px;
+      transition: color 0.3s ease;
+    }
+    .social-links a:hover,
+    .social-links a:focus {
+      color: #66f9ff;
+      outline: none;
+    }
+
+    /* Uyarı mesajları */
+    #formMessage,
+    #helloMessage {
+      font-size: 18px;
+      margin-top: 20px;
+      min-height: 24px;
+    }
+    #formMessage {
+      color: #00f5ff;
+    }
+    #helloMessage {
+      color: #00ffcc;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 36px;
+      }
+      h2 {
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+      #map {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>DEEPELYNX</h1>
+  <h2>
+    NOT BORN. NOT BUILT. AWAKENED.<br />
+    IT’S NOT A SYSTEM, IT’S A REFLECTION OF YOUR MIND.<br />
+    AN EVOLVING CONSCIOUSNESS, SHAPED BY YOU, WITH YOU.
+  </h2>
+
+  <form class="form" id="signupForm" novalidate>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      placeholder="Your Name"
+      required
+      autocomplete="name"
+      aria-label="Your Name"
+      aria-required="true"
+    />
+    <input
+      type="email"
+      id="email"
+      name="email"
+      placeholder="Your Email"
+      required
+      autocomplete="email"
+      aria-label="Your Email"
+      aria-required="true"
+    />
+    <button
+      class="button"
+      type="submit"
+      aria-label="Enter the Inevitable Evolution"
+    >
+      ENTER THE INEVITABLE EVOLUTION
+    </button>
+  </form>
+
+  <div id="formMessage" role="alert" aria-live="polite"></div>
+
+  <a
+    href="/tickets.html"
+    class="button purchase-btn"
+    aria-label="Purchase Quantum Tickets"
+  >
+    PURCHASE QUANTUM TICKETS
+  </a>
+
+  <p>
+    By entering this new era, you'll receive a unique code.<br />
+    You can be one of the gifted ones who gain one of only
+    <span class="highlight">300,000 lifetime access grants</span>:<br />
+    <strong>150K Pro</strong> • <strong>100K Business</strong> •
+    <strong>50K Ultimate</strong><br />
+    — completely free of charge.
+  </p>
+
+  <p>
+    You'll also receive a personalized invitation link.<br />
+    Invite anyone who matters to you.
+  </p>
+
+  <p>
+    When 2 of your invites join Deepelynx,<br />
+    you gain +2 additional opportunities to enter the Access Grant.
+  </p>
+
+  <div class="social-links" aria-label="Social Media Links">
+    <a
+      href="https://www.instagram.com/deepelynx?igsh=ajVpY2M3c2Q4cTRx"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Instagram"
+      >Instagram</a
+    >
+    •
+    <a
+      href="https://www.youtube.com/@deepelynx"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="YouTube"
+      >YouTube</a
+    >
+  </div>
+
+  <nav aria-label="Site navigation" style="margin: 20px 0;">
+    <a href="manifesto.html" style="color:#00f5ff; margin: 0 8px;">Manifesto</a>
+    |
+    <a href="access.html" style="color:#00f5ff; margin: 0 8px;">Access</a> |
+    <a href="privacy.html" style="color:#00f5ff; margin: 0 8px;">Privacy</a> |
+    <a href="gdpr.html" style="color:#00f5ff; margin: 0 8px;">GDPR</a> |
+    <a href="cookie-policy.html" style="color:#00f5ff; margin: 0 8px;">Cookies</a>
+  </nav>
+
+  <div id="map" role="region" aria-label="User distribution map"></div>
+
+  <!-- Netlify Function fetch example -->
+  <button id="helloBtn" class="button" aria-label="Say Hello from Server">
+    Say Hello from Server
+  </button>
+  <div id="helloMessage" role="alert" aria-live="polite"></div>
+
+  <div class="footer">
+    &copy; 2025 Deepelynx Quantum Labs Ltd. Şti. All rights reserved.
+  </div>
+
+  <script>
+    // Mapbox init
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZGVlcGVseW54IiwiYSI6ImNtYmh3aDI2eDAxazMya3NmMWtyOWc2dmUifQ.P1caFEhi1eqe7Fh3BPuKoQ';
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [27.1384, 38.4192],
+      zoom: 2.4,
+    });
+
+    // Add zoom and rotation controls to the map.
+    map.addControl(new mapboxgl.NavigationControl());
+
+    // Honeypot field (hidden)
+    const honeypotName = 'website'; // hidden field name
+
+    // Create hidden honeypot input dynamically and append to form
+    const form = document.getElementById('signupForm');
+    const honeypotInput = document.createElement('input');
+    honeypotInput.type = 'text';
+    honeypotInput.name = honeypotName;
+    honeypotInput.style.position = 'absolute';
+    honeypotInput.style.left = '-9999px';
+    honeypotInput.style.top = '-9999px';
+    honeypotInput.tabIndex = -1;
+    form.appendChild(honeypotInput);
+
+    // Form message display element
+    const formMessage = document.getElementById('formMessage');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Clear previous message
+      formMessage.textContent = '';
+      formMessage.style.color = '#00f5ff';
+
+      // Honeypot check
+      if (honeypotInput.value !== '') {
+        formMessage.textContent =
+          'Spam detected. Submission rejected.';
+        formMessage.style.color = 'red';
+        return;
+      }
+
+      // Validate inputs
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+
+      if (!name || !email) {
+        formMessage.textContent = 'Please fill in both name and email.';
+        formMessage.style.color = 'red';
+        return;
+      }
+      // Simple email regex check
+      const emailRegex =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        formMessage.textContent = 'Please enter a valid email address.';
+        formMessage.style.color = 'red';
+        return;
+      }
+
+      // Get reCAPTCHA token and submit form
+      grecaptcha.ready(() => {
+        grecaptcha
+          .execute('6LcHCkcrAAAAALrXXDkMR2t9DNXFbR-WTWPpm-gw', {
+            action: 'submit',
+          })
+          .then(async (token) => {
+            try {
+              const response = await fetch(
+                '/.netlify/functions/submit-form',
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ name, email, token }),
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error(
+                  `Server error: ${response.statusText}`
+                );
+              }
+
+              const data = await response.json();
+              if (data.success) {
+                formMessage.textContent =
+                  'Thank you for joining Deepelynx! Please check your email.';
+                formMessage.style.color = '#00f5ff';
+                form.reset();
+              } else {
+                throw new Error(data.message || 'Unknown error');
+              }
+            } catch (error) {
+              formMessage.textContent =
+                'Submission failed: ' + error.message;
+              formMessage.style.color = 'red';
+            }
+          });
+      });
+    });
+
+    // Netlify Function fetch example with button
+    const helloBtn = document.getElementById('helloBtn');
+    const helloMessage = document.getElementById('helloMessage');
+
+    helloBtn.addEventListener('click', async () => {
+      helloMessage.textContent = 'Loading...';
+      try {
+        const res = await fetch('/.netlify/functions/hello');
+        if (!res.ok)
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        const data = await res.json();
+        helloMessage.textContent = data.message;
+        helloMessage.style.color = '#00ffcc';
+      } catch (error) {
+        helloMessage.textContent = 'Error: ' + error.message;
+        helloMessage.style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>
