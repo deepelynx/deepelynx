@@ -3,12 +3,9 @@ const { createClient } = require('@supabase/supabase-js');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const { v4: uuidv4 } = require('uuid');
 
-// .env değişkenleri
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-// const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY; // geçici olarak kaldırıldı
 
-// Supabase istemcisi
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 exports.handler = async (event) => {
@@ -22,9 +19,8 @@ exports.handler = async (event) => {
 
   try {
     const data = JSON.parse(event.body);
-    const { email, token, honey } = data;
+    const { email, honey } = data;
 
-    // Honeypot kontrolü
     if (honey && honey.trim() !== '') {
       return {
         statusCode: 400,
@@ -33,34 +29,13 @@ exports.handler = async (event) => {
       };
     }
 
-    // --- reCAPTCHA doğrulaması geçici olarak kapatıldı ---
-    /*
-    const recaptchaRes = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`,
-    });
-    const recaptchaJson = await recaptchaRes.json();
-
-    if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'reCAPTCHA verification failed.' }),
-      };
-    }
-    */
-
-    // Benzersiz kod ve tarih üret
     const accessGrantCode = `solo${uuidv4().slice(0, 8)}`;
     const issuedDate = new Date().toISOString().split('T')[0];
 
-    // Supabase'e kayıt
     const { error } = await supabase.from('deepelynx_tickets').insert([
       {
         email,
-        access_code: accessGrantCode,
-        issued_at: issuedDate,
+        ticket_code: accessGrantCode,
         ticket_type: 'solo',
       },
     ]);
@@ -74,7 +49,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // Mail gönderimi
     await sendWelcomeEmail({
       to: email,
       accessGrantCode,
