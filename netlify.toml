@@ -1,9 +1,8 @@
 [build]
+  functions = "functions"
   publish = "public"
-  command = ""
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/submit"
+  to = "/.netlify/functions/submit-form"
   status = 200
-  force = true
