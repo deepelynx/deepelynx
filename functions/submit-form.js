@@ -13,11 +13,16 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
+  // node-fetch ES Module uyumluluğu için dinamik import
   const fetch = (await import('node-fetch')).default;
 
   try {
     const data = JSON.parse(event.body);
     const { email, token, honey } = data;
+
+    if (!email || !token) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing email or token' }) };
+    }
 
     if (honey && honey.trim() !== '') {
       return { statusCode: 400, body: JSON.stringify({ error: 'Bot detected.' }) };
@@ -28,6 +33,7 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`,
     });
+
     const recaptchaJson = await recaptchaRes.json();
 
     if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
@@ -47,8 +53,8 @@ exports.handler = async (event) => {
     ]);
 
     if (error) {
-      console.error('Supabase error:', error);
-      return { statusCode: 500, body: JSON.stringify({ error: 'Failed to save to database' }) };
+      console.error('Supabase insert error:', error);
+      return { statusCode: 500, body: JSON.stringify({ error: 'Database error' }) };
     }
 
     await sendWelcomeEmail({
@@ -63,7 +69,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'Success' }),
     };
   } catch (err) {
-    console.error('Function error:', err);
+    console.error('Function caught error:', err, err.stack);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Server error' }),
