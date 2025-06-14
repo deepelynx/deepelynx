@@ -1,9 +1,14 @@
+// sendWelcomeEmail fonksiyonu CommonJS formatındaysa bu satır çalışır:
 const sendWelcomeEmail = require('../emails/sendWelcomeEmail');
+
+// Eğer yukarıdaki çalışmıyorsa bu alternatifi kullan (o zaman üsttekini sil):
+// const sendWelcomeEmail = await import('../emails/sendWelcomeEmail.js').then(m => m.default);
+
 const { createClient } = require('@supabase/supabase-js');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const { v4: uuidv4 } = require('uuid');
 
-// .env değişkenleri
+// Ortam değişkenleri
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
@@ -24,7 +29,7 @@ exports.handler = async (event) => {
     const data = JSON.parse(event.body);
     const { email, token, honey } = data;
 
-    // Honeypot kontrolü
+    // Honeypot koruması
     if (honey && honey.trim() !== '') {
       return {
         statusCode: 400,
@@ -42,6 +47,7 @@ exports.handler = async (event) => {
     const recaptchaJson = await recaptchaRes.json();
 
     if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
+      console.warn('reCAPTCHA low score:', recaptchaJson.score);
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -49,11 +55,11 @@ exports.handler = async (event) => {
       };
     }
 
-    // Benzersiz kod ve tarih üret
+    // Kod ve tarih oluştur
     const accessGrantCode = `solo${uuidv4().slice(0, 8)}`;
     const issuedDate = new Date().toISOString().split('T')[0];
 
-    // Supabase'e kayıt
+    // Veritabanına kayıt
     const { error } = await supabase.from('deepelynx_tickets').insert([
       {
         email,
@@ -83,14 +89,18 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Success', accessGrantCode }),
+      body: JSON.stringify({
+        message: 'Success',
+        accessGrantCode,
+        issuedDate,
+      }),
     };
   } catch (err) {
     console.error('Function error:', err);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Server error' }),
+      body: JSON.stringify({ error: 'Server error', detail: err.message }),
     };
   }
 };
