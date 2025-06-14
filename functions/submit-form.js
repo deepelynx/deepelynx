@@ -1,134 +1,78 @@
+const sendWelcomeEmail = require('../emails/sendWelcomeEmail');
 const { createClient } = require('@supabase/supabase-js');
 const fetch = require('node-fetch');
-const { sendWelcomeEmail } = require('../emails/sendWelcomeEmail');
+const { v4: uuidv4 } = require('uuid');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// .env üzerinden değişkenler
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
+
+// Supabase istemcisi
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 exports.handler = async (event) => {
-  try {
-    if (!event.body) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ success: false, message: 'Missing request body.' }),
-      };
-    }
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
 
-    const { name, email, token, referral_code, website } = JSON.parse(event.body);
+  try {
+    const data = JSON.parse(event.body);
+    const { email, token, honey } = data;
 
     // Honeypot kontrolü
-    if (website && website.trim() !== '') {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ success: false, message: 'Bot detected (honeypot triggered).' }),
-      };
-    }
-
-    if (!name || !email || !token) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ success: false, message: 'Required fields are missing.' }),
-      };
-    }
-
-    // Email format doğrulama
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ success: false, message: 'Invalid email format.' }),
-      };
+    if (honey && honey.trim() !== '') {
+      return { statusCode: 400, body: 'Bot detected.' };
     }
 
     // reCAPTCHA doğrulama
-    const recaptchaRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    const recaptchaRes = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${process.env.RECAPTCHA_SECRET}&response=${token}`,
+      body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`,
     });
+    const recaptchaJson = await recaptchaRes.json();
 
-    const recaptchaData = await recaptchaRes.json();
-    if (!recaptchaData.success || recaptchaData.score < 0.5) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          success: false,
-          message: 'Suspicious activity detected. Please try again.',
-        }),
-      };
+    if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
+      return { statusCode: 400, body: 'reCAPTCHA failed.' };
     }
 
-    // Email tekilleştirme
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from('deepelynx_tickets')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
+    // Benzersiz kod ve tarih üret
+    const accessGrantCode = `solo${uuidv4().slice(0, 8)}`;
+    const issuedDate = new Date().toISOString().split('T')[0];
 
-    if (userCheckError) throw userCheckError;
-    if (existingUser) {
-      return {
-        statusCode: 409,
-        body: JSON.stringify({ success: false, message: 'This email is already registered.' }),
-      };
-    }
-
-    // Kod üretimi
-    const ticket_code = cryptoRandomString(8);
-    const new_referral_code = cryptoRandomString(8);
-
-    // Kaydı oluştur
-    const { data, error } = await supabase
-      .from('deepelynx_tickets')
-      .insert({
-        name,
+    // Supabase'e kayıt
+    const { error } = await supabase.from('deepelynx_tickets').insert([
+      {
         email,
-        referral_code: new_referral_code,
-        referred_by: referral_code || null,
-        ticket_code,
-      })
-      .select()
-      .single();
+        access_code: accessGrantCode,
+        issued_at: issuedDate,
+        ticket_type: 'solo',
+      },
+    ]);
 
-    if (error) throw error;
-
-    const referral_link = `https://deepelynx.com?ref=${new_referral_code}`;
-
-    // HOŞGELDİN MAILİ GÖNDER (Async, hata kontrolü opsiyonel)
-    try {
-      await sendWelcomeEmail({
-        to: email,
-        accessGrantCode: ticket_code,
-        issuedDate: new Date().toISOString().split('T')[0], // yyyy-mm-dd format
-        inviteLink: referral_link,
-      });
-    } catch (mailError) {
-      console.error("Welcome email send error:", mailError);
-      // istersen burada mail gönderilemedi uyarısı da dönebilirsin
+    if (error) {
+      console.error('Supabase error:', error);
+      return { statusCode: 500, body: 'Failed to save to database' };
     }
+
+    // Mail gönderimi
+    await sendWelcomeEmail({
+      to: email,
+      accessGrantCode,
+      issuedDate,
+      inviteLink: 'https://deepelynx.io/access',
+    });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        success: true,
-        ticket_code: data.ticket_code,
-        referral_link,
-      }),
+      body: JSON.stringify({ message: 'Success' }),
     };
-  } catch (error) {
+  } catch (err) {
+    console.error('Function error:', err);
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        success: false,
-        message: error.message || 'Unexpected server error.',
-      }),
+      body: JSON.stringify({ error: 'Server error' }),
     };
   }
 };
-
-// 8 karakterlik büyük harf + sayı kod üretimi
-function cryptoRandomString(length) {
-  return Math.random().toString(36).substring(2, 2 + length).toUpperCase();
-}
