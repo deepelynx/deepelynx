@@ -63,7 +63,7 @@ exports.handler = async function(event) {
     });
 
     const captchaData = await captchaResp.json();
-    if (!captchaData.success || captchaData.score < 0.5) {
+    if (!captchaData.success || (captchaData.score !== undefined && captchaData.score < 0.5)) {
       return {
         statusCode: 403,
         body: JSON.stringify({ message: 'Failed reCAPTCHA verification' }),
@@ -77,7 +77,7 @@ exports.handler = async function(event) {
     };
   }
 
-  // Check if user already exists
+  // Check if user already exists by email
   try {
     const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/deepelynx_tickets?email=eq.${encodeURIComponent(email)}`, {
       headers: {
