@@ -1,6 +1,5 @@
 const sendWelcomeEmail = require('../emails/sendWelcomeEmail');
 const { createClient } = require('@supabase/supabase-js');
-const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 
 // .env üzerinden değişkenler
@@ -15,6 +14,9 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
+
+  // Dinamik import yapıyoruz, ESM uyumluluğu için
+  const fetch = (await import('node-fetch')).default;
 
   try {
     const data = JSON.parse(event.body);
