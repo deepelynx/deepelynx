@@ -1,67 +1,45 @@
 const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_API_KEY = process.env.SUPABASE_API_KEY || '';
-const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET || '';
+// .env dosyasından değişkenleri çek
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_API_KEY = process.env.SUPABASE_API_KEY;
+const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET;
 
+// Basit email doğrulama
 function validateEmail(email) {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(String(email).toLowerCase());
 }
 
-exports.handler = async function (event) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+exports.handler = async function (event, context) {
+  console.log("✅ Netlify Function submit-form çalıştı");
 
-  // ENV değişkenleri eksikse erken çık
-  if (!SUPABASE_URL || !SUPABASE_API_KEY || !RECAPTCHA_SECRET) {
-    console.error('❌ Missing env vars:', {
-      SUPABASE_URL,
-      SUPABASE_API_KEY: SUPABASE_API_KEY ? 'SET' : 'MISSING',
-      RECAPTCHA_SECRET: RECAPTCHA_SECRET ? 'SET' : 'MISSING',
-    });
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ success: false, message: 'Server misconfiguration. Missing env variables.' }),
-    };
-  }
-
-  if (event.httpMethod === 'GET') {
-    if (event.queryStringParameters?.hello === 'true') {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ message: 'Hello from Deepelynx backend!' }),
-      };
-    }
-    return {
-      statusCode: 404,
-      headers,
-      body: JSON.stringify({ message: 'Not found' }),
-    };
-  }
-
+  // Yalnızca POST istekleri kabul edilir
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers,
-      body: JSON.stringify({ message: 'Method Not Allowed' }),
+      body: JSON.stringify({ success: false, message: 'Method Not Allowed' }),
     };
   }
 
-  // JSON parse
+  // Env kontrolü
+  if (!SUPABASE_URL || !SUPABASE_API_KEY || !RECAPTCHA_SECRET) {
+    console.error('❌ Missing env vars:', { SUPABASE_URL, SUPABASE_API_KEY, RECAPTCHA_SECRET });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ success: false, message: 'Server misconfiguration: Missing environment variables' }),
+    };
+  }
+
+  // İstek body’sini parse et
   let data;
   try {
     data = JSON.parse(event.body);
-  } catch (e) {
-    console.error('❌ JSON parse error:', e);
+  } catch (err) {
+    console.error('❌ JSON parse hatası:', err);
     return {
       statusCode: 400,
-      headers,
       body: JSON.stringify({ success: false, message: 'Invalid JSON' }),
     };
   }
@@ -71,7 +49,6 @@ exports.handler = async function (event) {
   if (!name || !email || !token) {
     return {
       statusCode: 400,
-      headers,
       body: JSON.stringify({ success: false, message: 'Missing required fields' }),
     };
   }
@@ -79,86 +56,74 @@ exports.handler = async function (event) {
   if (!validateEmail(email)) {
     return {
       statusCode: 400,
-      headers,
       body: JSON.stringify({ success: false, message: 'Invalid email format' }),
     };
   }
 
-  // reCAPTCHA doğrulama
+  // 🛡️ reCAPTCHA doğrulaması
   try {
-    const recaptchaResp = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${encodeURIComponent(RECAPTCHA_SECRET)}&response=${encodeURIComponent(token)}`,
+      body: `secret=${RECAPTCHA_SECRET}&response=${token}`,
     });
-    const recaptchaJson = await recaptchaResp.json();
-
-    if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
-      console.warn('⚠️ reCAPTCHA failed:', recaptchaJson);
+    const recaptchaData = await recaptchaResponse.json();
+    if (!recaptchaData.success || recaptchaData.score < 0.5) {
       return {
         statusCode: 403,
-        headers,
-        body: JSON.stringify({ success: false, message: 'Failed reCAPTCHA verification' }),
+        body: JSON.stringify({ success: false, message: 'reCAPTCHA verification failed' }),
       };
     }
   } catch (err) {
-    console.error('❌ reCAPTCHA error:', err);
+    console.error('❌ reCAPTCHA doğrulama hatası:', err);
     return {
       statusCode: 500,
-      headers,
       body: JSON.stringify({ success: false, message: 'Error verifying reCAPTCHA' }),
     };
   }
 
-  // Kullanıcı kontrolü
+  // 📬 Kullanıcı zaten var mı kontrol et
+  let existingUsers = [];
   try {
-    const userCheckResp = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}`, {
+    const check = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}`, {
       headers: {
-        apikey: SUPABASE_API_KEY,
-        Authorization: `Bearer ${SUPABASE_API_KEY}`,
-        Accept: 'application/json',
+        'apikey': SUPABASE_API_KEY,
+        'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+        'Accept': 'application/json',
       },
     });
-
-    if (!userCheckResp.ok) {
-      const errorText = await userCheckResp.text();
-      console.error('❌ Supabase user check error:', errorText);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ success: false, message: 'Error checking existing user' }),
-      };
+    if (!check.ok) {
+      const errorText = await check.text();
+      throw new Error(`Supabase check error: ${errorText}`);
     }
-
-    const existingUsers = await userCheckResp.json();
-    if (existingUsers.length > 0) {
-      return {
-        statusCode: 409,
-        headers,
-        body: JSON.stringify({ success: false, message: 'Email already registered' }),
-      };
-    }
+    existingUsers = await check.json();
   } catch (err) {
-    console.error('❌ Fetch error during user check:', err);
+    console.error('❌ Kullanıcı kontrol hatası:', err);
     return {
       statusCode: 500,
-      headers,
       body: JSON.stringify({ success: false, message: 'Error checking existing user' }),
     };
   }
 
-  // Yeni kullanıcı oluşturma
+  if (existingUsers.length > 0) {
+    return {
+      statusCode: 409,
+      body: JSON.stringify({ success: false, message: 'Email already registered' }),
+    };
+  }
+
+  // 🎫 Yeni kullanıcı oluştur
   const ticket_code = uuidv4().split('-')[0].toUpperCase();
   const referral_link = `https://deepelynx.com/?ref=${ticket_code}`;
 
   try {
-    const insertResp = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+    const insert = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
       method: 'POST',
       headers: {
-        apikey: SUPABASE_API_KEY,
-        Authorization: `Bearer ${SUPABASE_API_KEY}`,
+        'apikey': SUPABASE_API_KEY,
+        'Authorization': `Bearer ${SUPABASE_API_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=representation',
+        'Prefer': 'return=representation',
       },
       body: JSON.stringify({
         name,
@@ -170,32 +135,25 @@ exports.handler = async function (event) {
       }),
     });
 
-    if (!insertResp.ok) {
-      const errorText = await insertResp.text();
-      console.error('❌ Supabase insert error:', errorText);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ success: false, message: 'Error inserting user', error: errorText }),
-      };
+    if (!insert.ok) {
+      const errorText = await insert.text();
+      throw new Error(`Insert error: ${errorText}`);
     }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        success: true,
+        message: 'User registered successfully',
+        ticket_code,
+        referral_link,
+      }),
+    };
   } catch (err) {
-    console.error('❌ Insert fetch error:', err);
+    console.error('❌ Kullanıcı ekleme hatası:', err);
     return {
       statusCode: 500,
-      headers,
-      body: JSON.stringify({ success: false, message: 'Error inserting user', error: err.message }),
+      body: JSON.stringify({ success: false, message: 'Error inserting user' }),
     };
   }
-
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify({
-      success: true,
-      message: 'User registered successfully',
-      ticket_code,
-      referral_link,
-    }),
-  };
 };
