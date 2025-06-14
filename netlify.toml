@@ -1,36 +1,8 @@
 [build]
   publish = "public"
-  functions = "netlify/functions"
-
-[functions]
-  node_bundler = "esbuild"
+  command = ""
 
 [[redirects]]
-  from = "/tickets"
-  to = "/tickets.html"
-  status = 200
-
-[[redirects]]
-  from = "/access"
-  to = "/access.html"
-  status = 200
-
-[[redirects]]
-  from = "/cookie-policy"
-  to = "/cookie-policy.html"
-  status = 200
-
-[[redirects]]
-  from = "/gdpr"
-  to = "/gdpr.html"
-  status = 200
-
-[[redirects]]
-  from = "/manifesto"
-  to = "/manifesto.html"
-  status = 200
-
-[[redirects]]
-  from = "/privacy"
-  to = "/privacy.html"
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
   status = 200

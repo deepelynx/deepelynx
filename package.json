@@ -1,8 +1,7 @@
 {
   "type": "commonjs",
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.8",
-    "node-fetch": "^2.7.0",
+    "@supabase/supabase-js": "^2.50.0",
     "uuid": "^11.1.0"
   },
   "scripts": {
